@@ -7,7 +7,7 @@ const uuidv4 = require('uuid/v4');
 function responseTranslationServices(responseUrl) {
     let options = {
         method: 'POST',
-        uri: responseUrl,
+        url: responseUrl,
         body: [{
             "text": "",
             "response_type": "ephemeral",
@@ -38,6 +38,7 @@ function responseTranslationServices(responseUrl) {
         json: true,
     };
 
+    console.log('responseTranslationServices');
     request(options, function (err, res, body) {
         console.log(JSON.stringify(body, null, 4));
     });
@@ -46,7 +47,7 @@ function responseTranslationServices(responseUrl) {
 function responseLanguages(responseUrl) {
     let options = {
         method: 'POST',
-        uri: responseUrl,
+        url: responseUrl,
         body: [{
             "text": "",
             "response_type": "ephemeral",
@@ -77,6 +78,7 @@ function responseLanguages(responseUrl) {
         json: true,
     };
 
+    console.log('responseLanguages');
     request(options, function (err, res, body) {
         console.log(JSON.stringify(body, null, 4));
     });
@@ -102,12 +104,13 @@ function responseTranslation(responseUrl, text, to) {
         json: true,
     };
 
+    console.log('api.cognitive.microsofttranslator.com');
     request(options, function (err, res, body) {
         console.log(JSON.stringify(body, null, 4));
 
         let options = {
             method: 'POST',
-            uri: responseUrl,
+            url: responseUrl,
             body: [{
                 "response_type": "ephemeral",
                 "text": body[0].translations[0].text,
@@ -115,6 +118,7 @@ function responseTranslation(responseUrl, text, to) {
             json: true,
         };
 
+        console.log('responseTranslation');
         request(options, function (err, res, body) {
             console.log(JSON.stringify(body, null, 4));
         });
