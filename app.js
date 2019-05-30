@@ -7,8 +7,9 @@ const uuidv4 = require('uuid/v4');
 function responseTranslationServices(responseUrl) {
     let options = {
         method: 'POST',
-        url: responseUrl,
+        uri: responseUrl,
         body: [{
+            "text": "",
             "response_type": "ephemeral",
             "attachments": [
                 {
@@ -45,12 +46,13 @@ function responseTranslationServices(responseUrl) {
 function responseLanguages(responseUrl) {
     let options = {
         method: 'POST',
-        url: responseUrl,
+        uri: responseUrl,
         body: [{
+            "text": "",
             "response_type": "ephemeral",
             "attachments": [
                 {
-                    "text": "Translate to",
+                    "text": "Translate to:",
                     "fallback": "Unable to choose a Language",
                     "color": "#3AA3E3",
                     "attachment_type": "default",
@@ -105,7 +107,7 @@ function responseTranslation(responseUrl, text, to) {
 
         let options = {
             method: 'POST',
-            baseUrl: responseUrl,
+            uri: responseUrl,
             body: [{
                 "response_type": "ephemeral",
                 "text": body[0].translations[0].text,
