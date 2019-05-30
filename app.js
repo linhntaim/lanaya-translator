@@ -1,11 +1,86 @@
-// Import dependencies
-const { createMessageAdapter } = require('@slack/interactive-messages');
+const {createMessageAdapter} = require('@slack/interactive-messages');
 const http = require('http');
 const express = require('express');
 const request = require('request');
 const uuidv4 = require('uuid/v4');
 
-function translate(text, to) {
+function responseTranslationServices(responseUrl) {
+    let options = {
+        method: 'POST',
+        baseUrl: responseUrl,
+        body: [{
+            'response_type': 'ephemeral',
+            'attachments': [
+                {
+                    'text': 'Choose a Translation Service',
+                    'fallback': 'Unable to choose a Translation Service',
+                    'color': '#3AA3E3',
+                    'attachment_type': 'default',
+                    'callback_id': 'select_translate_service',
+                    'actions': [
+                        {
+                            'name': 'ts_microsoft',
+                            'value': 'ts_microsoft',
+                            'text': 'Microsoft',
+                            'type': 'button',
+                        },
+                        {
+                            'name': 'ts_google',
+                            'value': 'ts_google',
+                            'text': 'Google',
+                            'type': 'button',
+                        }
+                    ]
+                }
+            ]
+        }],
+        json: true,
+    };
+
+    request(options, function (err, res, body) {
+        console.log(JSON.stringify(body, null, 4));
+    });
+}
+
+function responseLanguages(responseUrl) {
+    let options = {
+        method: 'POST',
+        baseUrl: responseUrl,
+        body: [{
+            'response_type': 'ephemeral',
+            'attachments': [
+                {
+                    'text': 'Translate to',
+                    'fallback': 'Unable to choose a Language',
+                    'color': '#3AA3E3',
+                    'attachment_type': 'default',
+                    'callback_id': 'select_language',
+                    'actions': [
+                        {
+                            'name': 'english',
+                            'value': 'english',
+                            'text': 'English',
+                            'type': 'button',
+                        },
+                        {
+                            'name': 'vietnamese',
+                            'value': 'vietnamese',
+                            'text': 'Vietnamese',
+                            'type': 'button',
+                        }
+                    ]
+                }
+            ]
+        }],
+        json: true,
+    };
+
+    request(options, function (err, res, body) {
+        console.log(JSON.stringify(body, null, 4));
+    });
+}
+
+function responseTranslation(responseUrl, text, to) {
     let options = {
         method: 'POST',
         baseUrl: 'https://api.cognitive.microsofttranslator.com/',
@@ -25,41 +100,49 @@ function translate(text, to) {
         json: true,
     };
 
-    request(options, function(err, res, body){
+    request(options, function (err, res, body) {
         console.log(JSON.stringify(body, null, 4));
+
+        let options = {
+            method: 'POST',
+            baseUrl: responseUrl,
+            body: [{
+                'response_type': 'ephemeral',
+                'text': body[0].translations[0].text,
+            }],
+            json: true,
+        };
+
+        request(options, function (err, res, body) {
+            console.log(JSON.stringify(body, null, 4));
+        });
     });
 }
 
-// Create the adapter using the app's signing secret, read from environment variable
 const slackInteractions = createMessageAdapter(process.env.SLACK_SIGNING_SECRET || 'd08639fae19d281fc14fd32b878f109a');
-
-// Initialize an Express application
-// NOTE: You must use a body parser for the urlencoded format before attaching the adapter
 const app = express();
 
-// Attach the adapter to the Express application as a middleware
-// NOTE: The path must match the Request URL and/or Options URL configured in Slack
 app.use('/slack/actions', slackInteractions.expressMiddleware());
 
-// Run handlerFunction for any interactions from messages with a callback_id of welcome_button
 slackInteractions.action('translate', (payload, respond) => {
-    // `payload` is an object that describes the interaction
     console.log(payload);
-
-    translate(payload.message.text, 'vi');
-
-    // Before the work completes, return a message object that is the same as the original but with
-    // the interactive elements removed.
-    const reply = payload.original_message;
-    delete reply.attachments[0].actions;
-    return reply;
+    responseTranslationServices(payload.response_url);
+    return null;
 });
 
-// Select a port for the server to listen on.
-// NOTE: When using ngrok or localtunnel locally, choose the same port it was started with.
-const port = process.env.PORT || 3000;
+slackInteractions.action('select_translate_service', (payload, respond) => {
+    console.log(payload);
+    responseLanguages(payload.response_url);
+    return null;
+});
 
-// Start the express application server
+slackInteractions.action('select_language', (payload, respond) => {
+    console.log(payload);
+    responseTranslation(payload.response_url, 'Hello Vietnam', 'vi');
+    return null;
+});
+
+const port = process.env.PORT || 3000;
 http.createServer(app).listen(port, () => {
     console.log(`server listening on port ${port}`);
 });
