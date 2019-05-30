@@ -1,0 +1,15 @@
+{
+  "name": "slack-apps",
+  "version": "1.0.0",
+  "description": "Slack apps",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/interactive-messages": "^1.1.1",
+    "express": "^4.17.1"
+  }
+}
