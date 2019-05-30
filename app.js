@@ -135,7 +135,7 @@ function responseTranslation(responseUrl, messageId, to) {
 const slackInteractions = createMessageAdapter(process.env.SLACK_SIGNING_SECRET || 'd08639fae19d281fc14fd32b878f109a');
 const app = express();
 
-app.use('/slack/actions', slackInteractions.expressMiddleware());
+app.use('/lanaya-translator', slackInteractions.expressMiddleware());
 
 slackInteractions.action('translate', (payload, respond) => {
     responseTranslationServices(
