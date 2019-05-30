@@ -15,12 +15,16 @@ const app = express();
 app.use('/slack/actions', slackInteractions.expressMiddleware());
 
 // Run handlerFunction for any interactions from messages with a callback_id of welcome_button
-slackInteractions.action('translate', handlerFunction);
+slackInteractions.action('translate', (payload, respond) => {
+    // `payload` is an object that describes the interaction
+    console.log(payload);
 
-// This function is discussed in "Responding to actions" below
-function handlerFunction() {
-    console.log('handlerFunction');
-}
+    // Before the work completes, return a message object that is the same as the original but with
+    // the interactive elements removed.
+    const reply = payload.original_message;
+    delete reply.attachments[0].actions;
+    return reply;
+});
 
 // Select a port for the server to listen on.
 // NOTE: When using ngrok or localtunnel locally, choose the same port it was started with.
