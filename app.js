@@ -4,19 +4,48 @@ const express = require('express');
 const request = require('request');
 const uuidv4 = require('uuid/v4');
 
+let services = {
+    microsoft: 'Microsoft',
+    google: 'Google',
+};
+let languages = {
+    en: 'English',
+    vi: 'Vietnamese',
+};
 let messagePool = {};
+let messageLifeTime = 86400000 / 2; // 86400000 = 1 day
 
 function setMessage(messageId, text) {
-    messagePool[messageId] = text;
+    messagePool[messageId] = {
+        at: Date.now(),
+        text: text,
+    };
+    return messageId;
+}
+
+function setMessageService(messageId, service) {
+    messagePool[messageId].service = service;
     return messageId;
 }
 
 function getMessage(messageId) {
-    return messagePool[messageId];
+    return messagePool[messageId].text;
 }
 
 function removeMessage(messageId) {
     delete messagePool[messageId];
+}
+
+function autoRemoveMessage() {
+    let now = Date.now(), deleted = [];
+    for (let messageId in messagePool) {
+        if (now - messagePool[messageId].at > messageLifeTime) {
+            deleted.push(messageId);
+        }
+    }
+    deleted.forEach(messageId => {
+        removeMessage(messageId);
+    });
 }
 
 function responseTranslationServices(responseUrl, messageId) {
@@ -35,13 +64,13 @@ function responseTranslationServices(responseUrl, messageId) {
                     "callback_id": "select_translate_service",
                     "actions": [
                         {
-                            "name": "ts_microsoft",
+                            "name": "microsoft",
                             "value": messageId,
                             "text": "Microsoft",
                             "type": "button"
                         },
                         {
-                            "name": "ts_google",
+                            "name": "google",
                             "value": messageId,
                             "text": "Google",
                             "type": "button"
@@ -53,11 +82,29 @@ function responseTranslationServices(responseUrl, messageId) {
         json: true,
     };
 
-    request(options, function (err, res, body) {
+    request(options, (err, res, body) => {
     });
 }
 
-function responseLanguages(responseUrl, messageId) {
+function responseLanguages(responseUrl, messageId, service) {
+    if (service === 'google') {
+        let options = {
+            method: 'POST',
+            url: responseUrl,
+            body: {
+                "text": services[service] + " is currently not supported",
+                "response_type": "ephemeral",
+            },
+            json: true,
+        };
+
+        request(options, (err, res, body) => {
+        });
+        return;
+    }
+
+    setMessageService(messageId, service);
+
     let options = {
         method: 'POST',
         url: responseUrl,
@@ -91,7 +138,7 @@ function responseLanguages(responseUrl, messageId) {
         json: true,
     };
 
-    request(options, function (err, res, body) {
+    request(options, (err, res, body) => {
     });
 }
 
@@ -115,7 +162,7 @@ function responseTranslation(responseUrl, messageId, to) {
         json: true,
     };
 
-    request(options, function (err, res, body) {
+    request(options, (err, res, body) => {
         let options = {
             method: 'POST',
             url: responseUrl,
@@ -126,8 +173,9 @@ function responseTranslation(responseUrl, messageId, to) {
             json: true,
         };
 
-        request(options, function (err, res, body) {
-            removeMessage(messageId)
+        request(options, (err, res, body) => {
+            removeMessage(messageId);
+            autoRemoveMessage();
         });
     });
 }
@@ -135,7 +183,7 @@ function responseTranslation(responseUrl, messageId, to) {
 const slackInteractions = createMessageAdapter(process.env.SLACK_SIGNING_SECRET || 'd08639fae19d281fc14fd32b878f109a');
 const app = express();
 
-app.use('/lanaya-translator', slackInteractions.expressMiddleware());
+app.use('/', slackInteractions.expressMiddleware());
 
 slackInteractions.action('translate', (payload, respond) => {
     responseTranslationServices(
@@ -148,7 +196,8 @@ slackInteractions.action('translate', (payload, respond) => {
 slackInteractions.action('select_translate_service', (payload, respond) => {
     responseLanguages(
         payload.response_url,
-        payload.actions[0].value
+        payload.actions[0].value,
+        payload.actions[0].name
     );
     return '_Waiting..._';
 });
