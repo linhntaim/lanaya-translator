@@ -8,7 +8,7 @@ function responseTranslationServices(responseUrl) {
     let options = {
         method: 'POST',
         url: responseUrl,
-        body: [{
+        body: {
             "text": "",
             "response_type": "ephemeral",
             "attachments": [
@@ -34,7 +34,7 @@ function responseTranslationServices(responseUrl) {
                     ]
                 }
             ]
-        }],
+        },
         json: true,
     };
 
@@ -48,7 +48,7 @@ function responseLanguages(responseUrl) {
     let options = {
         method: 'POST',
         url: responseUrl,
-        body: [{
+        body: {
             "text": "",
             "response_type": "ephemeral",
             "attachments": [
@@ -74,7 +74,7 @@ function responseLanguages(responseUrl) {
                     ]
                 }
             ]
-        }],
+        },
         json: true,
     };
 
@@ -111,10 +111,10 @@ function responseTranslation(responseUrl, text, to) {
         let options = {
             method: 'POST',
             url: responseUrl,
-            body: [{
+            body: {
                 "response_type": "ephemeral",
                 "text": body[0].translations[0].text,
-            }],
+            },
             json: true,
         };
 
