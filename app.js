@@ -4,7 +4,22 @@ const express = require('express');
 const request = require('request');
 const uuidv4 = require('uuid/v4');
 
-function responseTranslationServices(responseUrl) {
+let messagePool = {};
+
+function setMessage(messageId, text) {
+    messagePool[messageId] = text;
+    return messageId;
+}
+
+function getMessage(messageId) {
+    return messagePool[messageId];
+}
+
+function removeMessage(messageId) {
+    delete messagePool[messageId];
+}
+
+function responseTranslationServices(responseUrl, messageId) {
     let options = {
         method: 'POST',
         url: responseUrl,
@@ -21,13 +36,13 @@ function responseTranslationServices(responseUrl) {
                     "actions": [
                         {
                             "name": "ts_microsoft",
-                            "value": "ts_microsoft",
+                            "value": messageId,
                             "text": "Microsoft",
                             "type": "button"
                         },
                         {
                             "name": "ts_google",
-                            "value": "ts_google",
+                            "value": messageId,
                             "text": "Google",
                             "type": "button"
                         }
@@ -38,13 +53,11 @@ function responseTranslationServices(responseUrl) {
         json: true,
     };
 
-    console.log('responseTranslationServices');
     request(options, function (err, res, body) {
-        console.log(JSON.stringify(body, null, 4));
     });
 }
 
-function responseLanguages(responseUrl) {
+function responseLanguages(responseUrl, messageId) {
     let options = {
         method: 'POST',
         url: responseUrl,
@@ -60,14 +73,14 @@ function responseLanguages(responseUrl) {
                     "callback_id": "select_language",
                     "actions": [
                         {
-                            "name": "english",
-                            "value": "english",
+                            "name": "en",
+                            "value": messageId,
                             "text": "English",
                             "type": "button"
                         },
                         {
-                            "name": "vietnamese",
-                            "value": "vietnamese",
+                            "name": "vi",
+                            "value": messageId,
                             "text": "Vietnamese",
                             "type": "button"
                         }
@@ -78,13 +91,11 @@ function responseLanguages(responseUrl) {
         json: true,
     };
 
-    console.log('responseLanguages');
     request(options, function (err, res, body) {
-        console.log(JSON.stringify(body, null, 4));
     });
 }
 
-function responseTranslation(responseUrl, text, to) {
+function responseTranslation(responseUrl, messageId, to) {
     let options = {
         method: 'POST',
         baseUrl: 'https://api.cognitive.microsofttranslator.com/',
@@ -99,15 +110,12 @@ function responseTranslation(responseUrl, text, to) {
             'X-ClientTraceId': uuidv4().toString()
         },
         body: [{
-            'text': text
+            'text': getMessage(messageId)
         }],
         json: true,
     };
 
-    console.log('api.cognitive.microsofttranslator.com');
     request(options, function (err, res, body) {
-        console.log(JSON.stringify(body, null, 4));
-
         let options = {
             method: 'POST',
             url: responseUrl,
@@ -118,9 +126,8 @@ function responseTranslation(responseUrl, text, to) {
             json: true,
         };
 
-        console.log('responseTranslation');
         request(options, function (err, res, body) {
-            console.log(JSON.stringify(body, null, 4));
+            removeMessage(messageId)
         });
     });
 }
@@ -131,21 +138,28 @@ const app = express();
 app.use('/slack/actions', slackInteractions.expressMiddleware());
 
 slackInteractions.action('translate', (payload, respond) => {
-    console.log(payload);
-    responseTranslationServices(payload.response_url);
-    return {};
+    responseTranslationServices(
+        payload.response_url,
+        setMessage(payload.message.client_msg_id, payload.message.text)
+    );
+    return '_Waiting..._';
 });
 
 slackInteractions.action('select_translate_service', (payload, respond) => {
-    console.log(payload);
-    responseLanguages(payload.response_url);
-    return {};
+    responseLanguages(
+        payload.response_url,
+        payload.actions[0].value
+    );
+    return '_Waiting..._';
 });
 
 slackInteractions.action('select_language', (payload, respond) => {
-    console.log(payload);
-    responseTranslation(payload.response_url, 'Hello Vietnam', 'vi');
-    return {};
+    responseTranslation(
+        payload.response_url,
+        payload.actions[0].value,
+        payload.actions[0].name
+    );
+    return '_Waiting..._';
 });
 
 const port = process.env.PORT || 3000;
