@@ -7,28 +7,28 @@ const uuidv4 = require('uuid/v4');
 function responseTranslationServices(responseUrl) {
     let options = {
         method: 'POST',
-        baseUrl: responseUrl,
+        url: responseUrl,
         body: [{
-            'response_type': 'ephemeral',
-            'attachments': [
+            "response_type": "ephemeral",
+            "attachments": [
                 {
-                    'text': 'Choose a Translation Service',
-                    'fallback': 'Unable to choose a Translation Service',
-                    'color': '#3AA3E3',
-                    'attachment_type': 'default',
-                    'callback_id': 'select_translate_service',
-                    'actions': [
+                    "text": "Choose a Translation Service",
+                    "fallback": "Unable to choose a Translation Service",
+                    "color": "#3AA3E3",
+                    "attachment_type": "default",
+                    "callback_id": "select_translate_service",
+                    "actions": [
                         {
-                            'name': 'ts_microsoft',
-                            'value': 'ts_microsoft',
-                            'text': 'Microsoft',
-                            'type': 'button',
+                            "name": "ts_microsoft",
+                            "value": "ts_microsoft",
+                            "text": "Microsoft",
+                            "type": "button"
                         },
                         {
-                            'name': 'ts_google',
-                            'value': 'ts_google',
-                            'text': 'Google',
-                            'type': 'button',
+                            "name": "ts_google",
+                            "value": "ts_google",
+                            "text": "Google",
+                            "type": "button"
                         }
                     ]
                 }
@@ -45,28 +45,28 @@ function responseTranslationServices(responseUrl) {
 function responseLanguages(responseUrl) {
     let options = {
         method: 'POST',
-        baseUrl: responseUrl,
+        url: responseUrl,
         body: [{
-            'response_type': 'ephemeral',
-            'attachments': [
+            "response_type": "ephemeral",
+            "attachments": [
                 {
-                    'text': 'Translate to',
-                    'fallback': 'Unable to choose a Language',
-                    'color': '#3AA3E3',
-                    'attachment_type': 'default',
-                    'callback_id': 'select_language',
-                    'actions': [
+                    "text": "Translate to",
+                    "fallback": "Unable to choose a Language",
+                    "color": "#3AA3E3",
+                    "attachment_type": "default",
+                    "callback_id": "select_language",
+                    "actions": [
                         {
-                            'name': 'english',
-                            'value': 'english',
-                            'text': 'English',
-                            'type': 'button',
+                            "name": "english",
+                            "value": "english",
+                            "text": "English",
+                            "type": "button"
                         },
                         {
-                            'name': 'vietnamese',
-                            'value': 'vietnamese',
-                            'text': 'Vietnamese',
-                            'type': 'button',
+                            "name": "vietnamese",
+                            "value": "vietnamese",
+                            "text": "Vietnamese",
+                            "type": "button"
                         }
                     ]
                 }
@@ -107,8 +107,8 @@ function responseTranslation(responseUrl, text, to) {
             method: 'POST',
             baseUrl: responseUrl,
             body: [{
-                'response_type': 'ephemeral',
-                'text': body[0].translations[0].text,
+                "response_type": "ephemeral",
+                "text": body[0].translations[0].text,
             }],
             json: true,
         };
