@@ -127,19 +127,19 @@ app.use('/slack/actions', slackInteractions.expressMiddleware());
 slackInteractions.action('translate', (payload, respond) => {
     console.log(payload);
     responseTranslationServices(payload.response_url);
-    return null;
+    return {};
 });
 
 slackInteractions.action('select_translate_service', (payload, respond) => {
     console.log(payload);
     responseLanguages(payload.response_url);
-    return null;
+    return {};
 });
 
 slackInteractions.action('select_language', (payload, respond) => {
     console.log(payload);
     responseTranslation(payload.response_url, 'Hello Vietnam', 'vi');
-    return null;
+    return {};
 });
 
 const port = process.env.PORT || 3000;
