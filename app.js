@@ -11,6 +11,7 @@ let services = {
 let languages = {
     en: 'English',
     vi: 'Vietnamese',
+    ja: 'Japanese',
 };
 let messagePool = {};
 let messageLifeTime = 86400000 / 2; // 86400000 = 1 day
@@ -48,7 +49,35 @@ function autoRemoveMessage() {
     });
 }
 
+function responseText(responseUrl, text) {
+    let options = {
+        method: 'POST',
+        url: responseUrl,
+        body: {
+            "text": text,
+            "response_type": "ephemeral",
+        },
+        json: true,
+    };
+
+    request(options, (err, res, body) => {
+    });
+}
+
 function responseTranslationServices(responseUrl, messageId) {
+    let actions = () => {
+        let a = [];
+        for(let service in services) {
+            a.push({
+                "name": service,
+                "value": messageId,
+                "text": services[service],
+                "type": "button"
+            });
+        }
+        return a;
+    };
+
     let options = {
         method: 'POST',
         url: responseUrl,
@@ -62,20 +91,7 @@ function responseTranslationServices(responseUrl, messageId) {
                     "color": "#3AA3E3",
                     "attachment_type": "default",
                     "callback_id": "select_translate_service",
-                    "actions": [
-                        {
-                            "name": "microsoft",
-                            "value": messageId,
-                            "text": "Microsoft",
-                            "type": "button"
-                        },
-                        {
-                            "name": "google",
-                            "value": messageId,
-                            "text": "Google",
-                            "type": "button"
-                        }
-                    ]
+                    "actions": actions()
                 }
             ]
         },
@@ -88,22 +104,24 @@ function responseTranslationServices(responseUrl, messageId) {
 
 function responseLanguages(responseUrl, messageId, service) {
     if (service === 'google') {
-        let options = {
-            method: 'POST',
-            url: responseUrl,
-            body: {
-                "text": services[service] + " is currently not supported",
-                "response_type": "ephemeral",
-            },
-            json: true,
-        };
-
-        request(options, (err, res, body) => {
-        });
+        responseText(responseUrl, services[service] + " is currently not supported");
         return;
     }
 
     setMessageService(messageId, service);
+
+    let actions = () => {
+        let a = [];
+        for(let lang in languages) {
+            a.push({
+                "name": lang,
+                "value": messageId,
+                "text": languages[lang],
+                "type": "button"
+            });
+        }
+        return a;
+    };
 
     let options = {
         method: 'POST',
@@ -118,20 +136,7 @@ function responseLanguages(responseUrl, messageId, service) {
                     "color": "#3AA3E3",
                     "attachment_type": "default",
                     "callback_id": "select_language",
-                    "actions": [
-                        {
-                            "name": "en",
-                            "value": messageId,
-                            "text": "English",
-                            "type": "button"
-                        },
-                        {
-                            "name": "vi",
-                            "value": messageId,
-                            "text": "Vietnamese",
-                            "type": "button"
-                        }
-                    ]
+                    "actions": actions()
                 }
             ]
         },
@@ -163,20 +168,8 @@ function responseTranslation(responseUrl, messageId, to) {
     };
 
     request(options, (err, res, body) => {
-        let options = {
-            method: 'POST',
-            url: responseUrl,
-            body: {
-                "response_type": "ephemeral",
-                "text": body[0].translations[0].text,
-            },
-            json: true,
-        };
-
-        request(options, (err, res, body) => {
-            removeMessage(messageId);
-            autoRemoveMessage();
-        });
+        responseText(responseUrl, body[0].translations[0].text);
+        autoRemoveMessage();
     });
 }
 
@@ -186,6 +179,8 @@ const app = express();
 app.use('/actions', slackInteractions.expressMiddleware());
 
 slackInteractions.action('translate', (payload, respond) => {
+    console.log('action/translate');
+    console.log(payload);
     responseTranslationServices(
         payload.response_url,
         setMessage(payload.message.client_msg_id, payload.message.text)
@@ -194,6 +189,8 @@ slackInteractions.action('translate', (payload, respond) => {
 });
 
 slackInteractions.action('select_translate_service', (payload, respond) => {
+    console.log('action/select_translate_service');
+    console.log(payload);
     responseLanguages(
         payload.response_url,
         payload.actions[0].value,
@@ -203,6 +200,8 @@ slackInteractions.action('select_translate_service', (payload, respond) => {
 });
 
 slackInteractions.action('select_language', (payload, respond) => {
+    console.log('action/select_language');
+    console.log(payload);
     responseTranslation(
         payload.response_url,
         payload.actions[0].value,

@@ -3,8 +3,7 @@
   "version": "1.0.0",
   "description": "Slack apps",
   "main": "app.js",
-  "scripts": {
-  },
+  "scripts": {},
   "author": "",
   "license": "ISC",
   "dependencies": {
