@@ -1,58 +1,58 @@
-const config = require('./config');
+require('dotenv').config()
+const http = require('http')
+const express = require('express')
+const request = require('request')
+const uuidv4 = require('uuid/v4')
+const {createMessageAdapter} = require('@slack/interactive-messages')
 
-const {createMessageAdapter} = require('@slack/interactive-messages');
-const http = require('http');
-const express = require('express');
-const request = require('request');
-const uuidv4 = require('uuid/v4');
-
-let services = {
+const services = {
     microsoft: 'Microsoft',
     google: 'Google',
-};
-let languages = {
+}
+const languages = {
     en: 'English',
     vi: 'Vietnamese',
     ja: 'Japanese',
-};
-let messagePool = {};
-let messageLifeTime = 86400000 / 2; // 86400000 = 1 day
+}
+const messageLifeTime = 86400000 / 2 // 86400000 = 1 day
+let messagePool = {}
 
 function setMessage(messageId, text) {
     messagePool[messageId] = {
         at: Date.now(),
         text: text,
-    };
-    return messageId;
+    }
+    return messageId
 }
 
 function setMessageService(messageId, service) {
     messagePool[messageId].service = service;
-    return messageId;
+    return messageId
 }
 
 function getMessage(messageId) {
-    return messagePool[messageId].text;
+    return messagePool[messageId].text
 }
 
 function removeMessage(messageId) {
-    delete messagePool[messageId];
+    delete messagePool[messageId]
 }
 
 function autoRemoveMessage() {
-    let now = Date.now(), deleted = [];
+    const now = Date.now()
+    let deleted = []
     for (let messageId in messagePool) {
         if (now - messagePool[messageId].at > messageLifeTime) {
-            deleted.push(messageId);
+            deleted.push(messageId)
         }
     }
     deleted.forEach(messageId => {
-        removeMessage(messageId);
-    });
+        removeMessage(messageId)
+    })
 }
 
 function responseText(responseUrl, text) {
-    let options = {
+    const options = {
         method: 'POST',
         url: responseUrl,
         body: {
@@ -60,27 +60,27 @@ function responseText(responseUrl, text) {
             "response_type": "ephemeral",
         },
         json: true,
-    };
+    }
 
     request(options, (err, res, body) => {
-    });
+    })
 }
 
 function responseTranslationServices(responseUrl, messageId) {
-    let actions = () => {
-        let a = [];
+    const actions = () => {
+        let a = []
         for (let service in services) {
             a.push({
                 "name": service,
                 "value": messageId,
                 "text": services[service],
                 "type": "button"
-            });
+            })
         }
-        return a;
-    };
+        return a
+    }
 
-    let options = {
+    const options = {
         method: 'POST',
         url: responseUrl,
         body: {
@@ -98,34 +98,34 @@ function responseTranslationServices(responseUrl, messageId) {
             ]
         },
         json: true,
-    };
+    }
 
     request(options, (err, res, body) => {
-    });
+    })
 }
 
 function responseLanguages(responseUrl, messageId, service) {
     if (service === 'google') {
-        responseText(responseUrl, services[service] + " is currently not supported");
-        return;
+        responseText(responseUrl, services[service] + " is currently not supported")
+        return
     }
 
-    setMessageService(messageId, service);
+    setMessageService(messageId, service)
 
-    let actions = () => {
-        let a = [];
+    const actions = () => {
+        let a = []
         for (let lang in languages) {
             a.push({
                 "name": lang,
                 "value": messageId,
                 "text": languages[lang],
                 "type": "button"
-            });
+            })
         }
-        return a;
-    };
+        return a
+    }
 
-    let options = {
+    const options = {
         method: 'POST',
         url: responseUrl,
         body: {
@@ -143,14 +143,14 @@ function responseLanguages(responseUrl, messageId, service) {
             ]
         },
         json: true,
-    };
+    }
 
     request(options, (err, res, body) => {
-    });
+    })
 }
 
 function responseTranslation(responseUrl, messageId, to) {
-    let options = {
+    const options = {
         method: 'POST',
         baseUrl: 'https://api.cognitive.microsofttranslator.com/',
         url: 'translate',
@@ -167,52 +167,52 @@ function responseTranslation(responseUrl, messageId, to) {
             'text': getMessage(messageId)
         }],
         json: true,
-    };
+    }
 
     request(options, (err, res, body) => {
-        responseText(responseUrl, body[0].translations[0].text);
-        autoRemoveMessage();
-    });
+        responseText(responseUrl, body[0].translations[0].text)
+        autoRemoveMessage()
+    })
 }
 
-const slackInteractions = createMessageAdapter(process.env.SLACK_SIGNING_SECRET || config.DEFAULT_SLACK_SIGNING_SECRET);
-const app = express();
+const slackInteractions = createMessageAdapter(process.env.SLACK_SIGNING_SECRET)
+const app = express()
 
-app.use('/', slackInteractions.expressMiddleware());
+app.use('/', slackInteractions.expressMiddleware())
 
 slackInteractions.action('translate', (payload, respond) => {
-    console.log('action/translate');
-    console.log(payload);
+    console.log('action/translate')
+    console.log(payload)
     responseTranslationServices(
         payload.response_url,
         setMessage(payload.message.client_msg_id, payload.message.text)
-    );
-    return '_Waiting..._';
+    )
+    return '_Waiting..._'
 });
 
 slackInteractions.action('select_translate_service', (payload, respond) => {
-    console.log('action/select_translate_service');
-    console.log(payload);
+    console.log('action/select_translate_service')
+    console.log(payload)
     responseLanguages(
         payload.response_url,
         payload.actions[0].value,
         payload.actions[0].name
-    );
-    return '_Waiting..._';
+    )
+    return '_Waiting..._'
 });
 
 slackInteractions.action('select_language', (payload, respond) => {
-    console.log('action/select_language');
-    console.log(payload);
+    console.log('action/select_language')
+    console.log(payload)
     responseTranslation(
         payload.response_url,
         payload.actions[0].value,
         payload.actions[0].name
     );
-    return '_Waiting..._';
+    return '_Waiting..._'
 });
 
-const port = process.env.PORT || config.DEFAULT_PORT;
+const port = process.env.PORT
 http.createServer(app).listen(port, () => {
-    console.log(`server listening on port ${port}`);
-});
+    console.log(`server listening on port ${port}`)
+})
