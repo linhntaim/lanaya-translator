@@ -4,12 +4,42 @@
     <meta charset="UTF-8">
     <meta name="slack-app-id" content="AK4KABLSY">
     <title>Lanaya Translator</title>
+    <style>
+        *, html {
+            padding: 0;
+            margin: 0;
+        }
+
+        .box {
+            position: absolute;
+            display: table;
+            width: 100%;
+            height: 100%;
+        }
+
+        .inner {
+            display: table-cell;
+            width: 100%;
+            height: 100%;
+            vertical-align: middle;
+            text-align: center;
+        }
+        h1 {
+            margin: 0 0 15px 0;
+        }
+    </style>
 </head>
 <body>
-<a href="https://slack.com/oauth/authorize?client_id=478597468598.650656394916&scope=commands">
-    <img alt="Add to Slack" height="40" width="139"
-         src="https://platform.slack-edge.com/img/add_to_slack.png"
-         srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x">
-</a>
+<div class="box">
+    <div class="inner">
+        <h1>Lanaya Translator</h1>
+        <div>
+            <a href="https://slack.com/oauth/authorize?client_id=478597468598.650656394916&scope=commands,team:read">
+                <img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png"
+                     srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x">
+            </a>
+        </div>
+    </div>
+</div>
 </body>
 </html>
