@@ -4,26 +4,7 @@ const express = require('express')
 const request = require('request')
 const app = express()
 
-function requestTeamInfo(accessToken) {
-    const options = {
-        uri: 'https://slack.com/api/team.info',
-        method: 'GET',
-        headers: {
-            'Authorization': 'Bearer ' + accessToken,
-        },
-    }
-    request(options, (error, response, body) => {
-        const JSONresponse = JSON.parse(body)
-        console.log(JSONresponse)
-        if (!JSONresponse.ok) {
-            res.send("Error encountered: \n" + JSON.stringify(JSONresponse)).status(200).end()
-        } else {
-            res.redirect('https://' + JSONresponse.team.domain + '.slack.com')
-        }
-    })
-}
-
-function requestAuth(code) {
+function requestAuth(code, callback) {
     const options = {
         uri: 'https://slack.com/api/oauth.access?code='
             + code +
@@ -36,9 +17,28 @@ function requestAuth(code) {
         const JSONresponse = JSON.parse(body)
         console.log(JSONresponse)
         if (!JSONresponse.ok) {
-            res.send("Error encountered: \n" + JSON.stringify(JSONresponse)).status(200).end()
+            console.log("Error encountered")
         } else {
-            requestTeamInfo(JSONresponse.access_token)
+            requestTeamInfo(JSONresponse.access_token, callback)
+        }
+    })
+}
+
+function requestTeamInfo(accessToken, callback) {
+    const options = {
+        uri: 'https://slack.com/api/team.info',
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + accessToken,
+        },
+    }
+    request(options, (error, response, body) => {
+        const JSONresponse = JSON.parse(body)
+        console.log(JSONresponse)
+        if (!JSONresponse.ok) {
+            console.log("Error encountered")
+        } else {
+            callback(JSONresponse.team.domain)
         }
     })
 }
@@ -48,7 +48,9 @@ app.get('/', (req, res) => {
 })
 
 app.get('/redirect', (req, res) => {
-    requestAuth(req.query.code)
+    requestAuth(req.query.code, (domain) => {
+        res.redirect('https://' + domain + '.slack.com')
+    })
 })
 
 const port = process.env.PORT
