@@ -4,6 +4,9 @@ const express = require('express');
 const request = require('request');
 const uuidv4 = require('uuid/v4');
 
+const DEFAULT_SLACK_SIGNING_SECRET = '8e4a6590f8c48b8eaa882d09b831e9f5';
+const DEFAULT_PORT = 3000;
+
 let services = {
     microsoft: 'Microsoft',
     google: 'Google',
@@ -67,7 +70,7 @@ function responseText(responseUrl, text) {
 function responseTranslationServices(responseUrl, messageId) {
     let actions = () => {
         let a = [];
-        for(let service in services) {
+        for (let service in services) {
             a.push({
                 "name": service,
                 "value": messageId,
@@ -112,7 +115,7 @@ function responseLanguages(responseUrl, messageId, service) {
 
     let actions = () => {
         let a = [];
-        for(let lang in languages) {
+        for (let lang in languages) {
             a.push({
                 "name": lang,
                 "value": messageId,
@@ -173,7 +176,7 @@ function responseTranslation(responseUrl, messageId, to) {
     });
 }
 
-const slackInteractions = createMessageAdapter(process.env.SLACK_SIGNING_SECRET || 'd08639fae19d281fc14fd32b878f109a');
+const slackInteractions = createMessageAdapter(process.env.SLACK_SIGNING_SECRET || DEFAULT_SLACK_SIGNING_SECRET);
 const app = express();
 
 app.use('/actions', slackInteractions.expressMiddleware());
@@ -210,7 +213,7 @@ slackInteractions.action('select_language', (payload, respond) => {
     return '_Waiting..._';
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || DEFAULT_PORT;
 http.createServer(app).listen(port, () => {
     console.log(`server listening on port ${port}`);
 });
