@@ -4,11 +4,26 @@ const express = require('express')
 const request = require('request')
 const app = express()
 
-app.get('/auth', (req, res) => {
-    res.sendFile(__dirname + '/add_to_slack.html')
-})
+function requestTeamInfo(accessToken) {
+    const options = {
+        uri: 'https://slack.com/api/team.info',
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + accessToken,
+        },
+    }
+    request(options, (error, response, body) => {
+        const JSONresponse = JSON.parse(body)
+        console.log(JSONresponse)
+        if (!JSONresponse.ok) {
+            res.send("Error encountered: \n" + JSON.stringify(JSONresponse)).status(200).end()
+        } else {
+            res.redirect('https://' + JSONresponse.team.domain + '.slack.com')
+        }
+    })
+}
 
-app.get('/auth/redirect', (req, res) => {
+function requestAuth() {
     const options = {
         uri: 'https://slack.com/api/oauth.access?code='
             + req.query.code +
@@ -19,14 +34,21 @@ app.get('/auth/redirect', (req, res) => {
     }
     request(options, (error, response, body) => {
         const JSONresponse = JSON.parse(body)
+        console.log(JSONresponse)
         if (!JSONresponse.ok) {
-            console.log(JSONresponse)
             res.send("Error encountered: \n" + JSON.stringify(JSONresponse)).status(200).end()
         } else {
-            console.log(JSONresponse)
-            res.send("Success!")
+            requestTeamInfo(JSONresponse.access_token)
         }
     })
+}
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/add_to_slack.html')
+})
+
+app.get('/redirect', (req, res) => {
+    requestAuth()
 })
 
 const port = process.env.PORT
