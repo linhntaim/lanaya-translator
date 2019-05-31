@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "description": "Slack apps",
   "main": "app.js",
-  "scripts": {},
+  "scripts": {
+    "prepare": "cp ./config.js.example ./config.js"
+  },
   "author": "",
   "license": "ISC",
   "dependencies": {
