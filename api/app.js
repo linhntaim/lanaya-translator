@@ -178,7 +178,7 @@ function responseTranslation(responseUrl, messageId, to) {
 const slackInteractions = createMessageAdapter(process.env.SLACK_SIGNING_SECRET || config.DEFAULT_SLACK_SIGNING_SECRET);
 const app = express();
 
-app.use('/actions', slackInteractions.expressMiddleware());
+app.use('/', slackInteractions.expressMiddleware());
 
 slackInteractions.action('translate', (payload, respond) => {
     console.log('action/translate');
