@@ -90,7 +90,7 @@ function responseTranslationServices(responseUrl, messageId) {
                 {
                     "text": "Choose a Translation Service",
                     "fallback": "Unable to choose a Translation Service",
-                    "color": "#3AA3E3",
+                    "color": "#690696",
                     "attachment_type": "default",
                     "callback_id": "select_translate_service",
                     "actions": actions()
@@ -135,7 +135,7 @@ function responseLanguages(responseUrl, messageId, service) {
                 {
                     "text": "Translate to:",
                     "fallback": "Unable to choose a Language",
-                    "color": "#3AA3E3",
+                    "color": "#690696",
                     "attachment_type": "default",
                     "callback_id": "select_language",
                     "actions": actions()
